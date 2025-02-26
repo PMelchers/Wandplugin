@@ -1,0 +1,13 @@
+name: MagicWands
+version: '${project.version}'
+main: me.sovjetelmo.wandplugin.Wandplugin
+api-version: '1.21'
+commands:
+  magicwand:
+    description: 'A wand that has magic'
+    usage: '/magicwand <wandType>'
+    aliases: ['mw']
+permissions:
+  MagicWands.use:
+    description: 'Allows players to use the commands of this plugin'
+    default: true
