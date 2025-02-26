@@ -1,8 +1,6 @@
 package me.sovjetelmo.wandplugin;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -61,7 +59,9 @@ public class MagicWandsListener implements Listener {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 12;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.GREEN + "Selected spell: " + getSpellName("god", nextSpell));
+                player.sendMessage(ChatColor.GREEN + "Selected spell: " + getSpellName("god", nextSpell)  + nextSpell);
+                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
+                player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
@@ -77,7 +77,9 @@ public class MagicWandsListener implements Listener {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 8;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.RED + "Selected spell: " + getSpellName("raftagar", nextSpell));
+                player.sendMessage(ChatColor.RED + "Selected spell: " + getSpellName("raftagar", nextSpell)  + nextSpell);
+                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
+                player.getWorld().spawnParticle(Particle.ENTITY_EFFECT, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
@@ -94,7 +96,10 @@ public class MagicWandsListener implements Listener {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 8;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.BLUE + "Selected spell: " + getSpellName("empire", nextSpell));
+                player.sendMessage(ChatColor.BLUE + "Selected spell: " + getSpellName("empire", nextSpell) + nextSpell);
+                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
+                player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 2, 0.3, 0.3, 0.3, 0.02); // Small spark particles
+                player.getWorld().spawnParticle(Particle.SPIT, player.getLocation(), 1, 0.3, 0.3, 0.3, 0.01); // Smoke trail
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);

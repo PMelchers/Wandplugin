@@ -12,6 +12,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.Objects;
@@ -273,15 +274,13 @@ public class Spells {
     }
 
     public void summonChainLightning(Player player) {
-
-        // Not balanced at all kills yourself
         double damage = 20.0; // Damage dealt each strike
         int maxChains = 5; // Max number of enemies
         double range = 10.0; // Maximum range in blocks between strikes
 
         LivingEntity target = getTargetEntity(player);
-        if (target == null) {
-            player.sendMessage("No target found for Chain Lightning!");
+        if (target == null || target == player) {
+            player.sendMessage("No valid target found for Chain Lightning!");
             return;
         }
 
@@ -289,8 +288,7 @@ public class Spells {
 
         LivingEntity currentTarget = target;
         for (int i = 1; i < maxChains; i++) {
-
-            currentTarget = getNextTargetInRange(currentTarget, range);
+            currentTarget = getNextTargetInRange(currentTarget, range, player);
             if (currentTarget == null) {
                 break; // If no more targets are in range
             }
@@ -305,29 +303,24 @@ public class Spells {
     }
 
     private LivingEntity getTargetEntity(Player player) {
-
-        if (player.getTargetEntity(50) instanceof LivingEntity) {
-            return (LivingEntity) player.getTargetEntity(50);
+        Entity targetEntity = player.getTargetEntity(50);
+        if (targetEntity instanceof LivingEntity && targetEntity != player) {
+            return (LivingEntity) targetEntity;
         }
-
         return null;
     }
 
-    private LivingEntity getNextTargetInRange(LivingEntity currentTarget, double range) {
-
+    private LivingEntity getNextTargetInRange(LivingEntity currentTarget, double range, Player player) {
         return currentTarget.getNearbyEntities(range, range, range).stream()
                 .filter(entity -> entity instanceof LivingEntity)
                 .map(entity -> (LivingEntity) entity)
-                .filter(entity -> entity != currentTarget) // Exclude the current target for dupe
+                .filter(entity -> entity != currentTarget && entity != player) // Exclude player and current target
                 .findFirst()
                 .orElse(null); // Return null if no target found
     }
 
     private void strikeLightning(LivingEntity target, double damage, Player player) {
-
         target.getWorld().strikeLightning(target.getLocation());
-
-
         target.damage(damage);
 
         // Visual and sound
@@ -338,15 +331,45 @@ public class Spells {
     /* Empire Wand */
 
     public void summonTornado(Player player) {
+        // poging tot mooiere tornado
         Location loc = player.getLocation();
-        player.getWorld().spawnParticle(Particle.CLOUD, loc, 50, 5, 0, 5, 0.1);
-        player.getNearbyEntities(5, 5, 5).stream()
-                .filter(entity -> entity instanceof LivingEntity)
-                .forEach(entity -> {
-                    Vector vector = entity.getLocation().toVector().subtract(loc.toVector()).normalize().setY(1);
-                    entity.setVelocity(vector.multiply(2));
-                });
+        World world = player.getWorld();
+
+        new BukkitRunnable() {
+            double angle = 0;
+            int duration = 100;
+
+            @Override
+            public void run() {
+                if (duration-- <= 0) {
+                    this.cancel();
+                    return;
+                }
+
+
+                for (int i = 0; i < 5; i++) {
+                    double radius = 1 + (i * 0.5);
+                    double x = Math.cos(angle + (i * 0.5)) * radius;
+                    double z = Math.sin(angle + (i * 0.5)) * radius;
+                    Location particleLoc = loc.clone().add(x, i * 0.5, z);
+
+                    world.spawnParticle(Particle.CLOUD, particleLoc, 5, 0.1, 0.1, 0.1, 0);
+                }
+
+
+                player.getNearbyEntities(5, 5, 5).stream()
+                        .filter(entity -> entity instanceof LivingEntity)
+                        .forEach(entity -> {
+                            Vector vector = entity.getLocation().toVector().subtract(loc.toVector()).normalize().setY(1);
+                            entity.setVelocity(vector.multiply(1.5));
+                        });
+
+
+                angle += Math.PI / 8;
+            }
+        }.runTaskTimer(plugin, 0, 2);
     }
+
 
     public void summonIceSpike(Player player) {
         // Launch
@@ -404,16 +427,35 @@ public class Spells {
     }
 
     public void summonFreezeBlast(Player player) {
-
         Location location = player.getLocation();
-        player.getWorld().spawnParticle(Particle.SNOWFLAKE, location, 100, 5, 5, 5, 0.1);
+        World world = player.getWorld();
 
-        for (Entity entity : location.getWorld().getNearbyEntities(location, 5, 5, 5)) {
+        world.spawnParticle(Particle.SNOWFLAKE, location, 150, 3, 3, 3, 0.1);
+
+        world.spawnParticle(Particle.CLOUD, location, 50, 2, 2, 2, 0.05);
+
+        for (int i = 0; i < 5; i++) {
+            world.spawnParticle(Particle.SNOWFLAKE, location.clone().add(0, i, 0), 20, 1, 0.5, 1, 0.1, Material.ICE.createBlockData());
+        }
+
+
+        world.playSound(location, Sound.BLOCK_GLASS_BREAK, 1.5f, 0.8f);
+
+
+        world.playSound(location, Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1.2f, 0.5f);
+
+
+        for (Entity entity : world.getNearbyEntities(location, 5, 5, 5)) {
             if (entity instanceof LivingEntity && entity != player) {
                 ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 255));
+
+                world.spawnParticle(Particle.SNOWFLAKE, entity.getLocation(), 50, 0.5, 1, 0.5, 0.05);
+
+                world.playSound(entity.getLocation(), Sound.BLOCK_SNOW_BREAK, 1f, 1f);
             }
         }
     }
+
 
 
     public void summonConfusion(Player player) {
@@ -430,7 +472,7 @@ public class Spells {
         World world = targetLocation.getWorld();
         if (world == null) return;
 
-        int radius = 2; // Radius of 1 block all directions
+        int radius = 3; // Radius of 1 block all directions
 
         // Create particle effects
         for (double x = -radius; x <= radius; x++) {
@@ -438,6 +480,7 @@ public class Spells {
                 for (double z = -radius; z <= radius; z++) {
                     Location particleLocation = targetLocation.clone().add(x, y, z);
                     world.spawnParticle(Particle.SMOKE, particleLocation, 5, 0.1, 0.1, 0.1, 0.01);
+                    world.spawnParticle(Particle.WITCH, particleLocation, 5, 0.1, 0.1, 0.1, 0.01);
                 }
             }
         }
@@ -446,7 +489,7 @@ public class Spells {
         for (Entity entity : world.getNearbyEntities(targetLocation, radius + 0.5, radius + 0.5, radius + 0.5)) {
             if (entity instanceof LivingEntity livingEntity) {
                 // Apply nausea
-                livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 200, 7)); // Nausea for 10 seconds
+                livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 200, 20)); // Nausea for 10 seconds
                 // Apply damage
                 livingEntity.damage(4.0); // Deal 2 hearts of damage
             }
@@ -458,13 +501,22 @@ public class Spells {
 
 
     public void summonFrostShield(Player player) {
-        // Player is stuck in the middle
+
         Location location = player.getLocation();
-        // Spawn ice blocks around the player to form a shield (simplified version)
-        for (int x = -3; x <= 3; x++) {
-            for (int y = -3; y <= 3; y++) {
-                for (int z = -3; z <= 3; z++) {
+
+        int radius = 5;
+
+        for (int x = -radius; x <= radius; x++) {
+            for (int y = -radius; y <= radius; y++) {
+                for (int z = -radius; z <= radius; z++) {
+
                     Location offsetLocation = location.clone().add(x, y, z);
+
+
+                    if (y == 0 && Math.abs(x) <= 1 && Math.abs(z) <= 1) {
+                        continue;
+                    }
+
                     offsetLocation.getBlock().setType(Material.ICE);
                 }
             }
