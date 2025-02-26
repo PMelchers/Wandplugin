@@ -1,56 +1,57 @@
 package me.sovjetelmo.wandplugin;
 
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.ThrownExpBottle;
-import org.bukkit.entity.ThrownPotion;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
-import org.bukkit.inventory.EquipmentSlot;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.util.Vector;
-import org.checkerframework.checker.units.qual.A;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 
 public final class Wandplugin extends JavaPlugin {
     private static Wandplugin instance;
+    private GUIManager guiManager;
+
     @Override
     public void onEnable() {
-        instance = this;
-        getLogger().info("Magic Wands plugin is enabled");
-
-        MagicWandsListener listener = new MagicWandsListener(this);
-        getServer().getPluginManager().registerEvents(listener, this);
-        Commands commandExecutor = new Commands();
-        getCommand("magicwand").setExecutor(commandExecutor);
+        // Plugin startup logic
+        saveDefaultConfig();
+        instance = this; // Set the instance when the plugin is enabled
+        this.guiManager = new GUIManager(this);
+        getCommand("magicwand").setExecutor(new Commands());
+        getCommand("mw").setExecutor(this);
+        getCommand("mwconfig").setExecutor(this);
+        getServer().getPluginManager().registerEvents(new MagicWandsListener(this), this);
+        getServer().getPluginManager().registerEvents(new GUIListener(this), this);
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("Magic Wands is disabled");
+        // Plugin shutdown logic
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage("This command can only be used by players.");
+            return true;
+        }
+
+        Player player = (Player) sender;
+
+        if (command.getName().equalsIgnoreCase("mw")) {
+            guiManager.openWandSelectionGUI(player);
+            return true;
+        } else if (command.getName().equalsIgnoreCase("mwconfig")) {
+            guiManager.openSpellConfigGUI(player);
+            return true;
+        }
+
+        return false;
     }
 
     public static Wandplugin getInstance() {
         return instance;
     }
 
+    public GUIManager getGUIManager() {
+        return guiManager;
+    }
 }

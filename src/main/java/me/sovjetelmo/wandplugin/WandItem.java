@@ -12,11 +12,7 @@ import java.util.Collections;
 
 public class WandItem {
 
-    public boolean giveWand(Player player, String wandType) {
-        if (player == null) {
-            return false;
-        }
-
+    public ItemStack createWandItem(String wandType) {
         Material wandMaterial;
         String displayName;
         NamespacedKey wandKey = new NamespacedKey(Wandplugin.getInstance(), "wand-type");
@@ -36,7 +32,6 @@ public class WandItem {
                 displayName = ChatColor.DARK_PURPLE + ChatColor.BOLD.toString() + "Empire Wand";
                 break;
             default:
-                player.sendMessage(ChatColor.RED + "Invalid wand type Defaulting to Empire Wand");
                 wandMaterial = Material.BLAZE_ROD;
                 displayName = ChatColor.DARK_PURPLE + ChatColor.BOLD.toString() + "Empire Wand";
                 break;
@@ -53,10 +48,23 @@ public class WandItem {
             meta.getPersistentDataContainer().set(wandKey, PersistentDataType.STRING, wandType);
 
             wand.setItemMeta(meta);
-            player.getInventory().addItem(wand);
-
-            player.sendMessage("You got the " + displayName + "!");
         }
-        return true;
+        return wand;
+    }
+
+    public boolean giveWand(Player player, String wandType) {
+        if (player == null) {
+            return false;
+        }
+
+        // Use createWandItem to get the wand
+        ItemStack wand = createWandItem(wandType);
+
+        if (wand != null) {
+            player.getInventory().addItem(wand);
+            player.sendMessage("You got the " + wand.getItemMeta().getDisplayName() + "!");
+            return true;
+        }
+        return false;
     }
 }

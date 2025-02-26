@@ -239,7 +239,6 @@ public class Spells {
 
 
     public void summonFireball(Player player) {
-        // TESTING
         final float explosionRadius = 4.0f;
 
         Location eyeLocation = player.getEyeLocation();
@@ -250,23 +249,32 @@ public class Spells {
         fireball.setYield(explosionRadius); // Set radius
         fireball.setIsIncendiary(false); // Prevent fire
 
-        // Add trail
+        // Add metadata to identify the custom fireball
+        fireball.setMetadata("customFireball", new FixedMetadataValue(plugin, true));
+
+        // Play sound when shooting
+        fireball.getWorld().playSound(eyeLocation, Sound.ENTITY_WITCH_AMBIENT, 1f, 1f);
+
+        // Add fireball trail
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (fireball.isDead() || fireball.isOnGround()) {
-                return;
-            }
+            if (fireball.isDead() || fireball.isOnGround()) return;
+
             fireball.getWorld().spawnParticle(Particle.WITCH, fireball.getLocation(), 5, 0.1, 0.1, 0.1, 0);
             fireball.getWorld().spawnParticle(Particle.SMOKE, fireball.getLocation(), 3, 0.1, 0.1, 0.1, 0);
         }, 0, 2);
-
-        fireball.setMetadata("customFireball", new FixedMetadataValue(plugin, true));
-        fireball.getWorld().playSound(eyeLocation, Sound.ENTITY_WITCH_AMBIENT, 1f, 1f);
-
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            Location impactLocation = fireball.getLocation();
-            createExplosionEffect(impactLocation, player);
-        }, 2);
     }
+
+    // Listen for Fireball impact
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        if (event.getEntity() instanceof Fireball fireball && fireball.getShooter() instanceof Player player) {
+            // Check if this is a custom fireball
+            if (fireball.hasMetadata("customFireball")) {
+                createExplosionEffect(fireball.getLocation(), player);
+            }
+        }
+    }
+
 
     public void summonLightningStrike(Player player) {
         Location targetLocation = player.getTargetBlockExact(50).getLocation();
@@ -331,44 +339,48 @@ public class Spells {
     /* Empire Wand */
 
     public void summonTornado(Player player) {
-        // poging tot mooiere tornado
-        Location loc = player.getLocation();
-        World world = player.getWorld();
-
         new BukkitRunnable() {
             double angle = 0;
-            int duration = 100;
+            int duration = 100; // Tornado lasts for 100 ticks (5 seconds)
 
             @Override
             public void run() {
-                if (duration-- <= 0) {
+                if (duration-- <= 0 || !player.isOnline()) {
                     this.cancel();
                     return;
                 }
 
+                Location playerLoc = player.getLocation(); // Tornado follows the player
+                World world = playerLoc.getWorld();
 
-                for (int i = 0; i < 5; i++) {
-                    double radius = 1 + (i * 0.5);
-                    double x = Math.cos(angle + (i * 0.5)) * radius;
-                    double z = Math.sin(angle + (i * 0.5)) * radius;
-                    Location particleLoc = loc.clone().add(x, i * 0.5, z);
+                // Create the spinning tornado effect
+                for (int i = 0; i < 25; i++) { // Increased height
+                    double radius = 1.8 + (i * 0.25); // Wider tornado
+                    double x = Math.cos(angle + (i * 0.4)) * radius;
+                    double z = Math.sin(angle + (i * 0.4)) * radius;
+                    Location particleLoc = playerLoc.clone().add(x, i * 0.5, z);
 
-                    world.spawnParticle(Particle.CLOUD, particleLoc, 5, 0.1, 0.1, 0.1, 0);
+                    world.spawnParticle(Particle.CLOUD, particleLoc, 10, 0.1, 0.1, 0.1, 0);
+                    world.spawnParticle(Particle.SNOWFLAKE, particleLoc, 3, 0.1, 0.1, 0.1, 0);
+                    world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, particleLoc, 2, 0.1, 0.1, 0.1, 0);
                 }
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 255));
 
-
-                player.getNearbyEntities(5, 5, 5).stream()
+                // Lift nearby entities violently
+                player.getNearbyEntities(5, 15, 5).stream()
                         .filter(entity -> entity instanceof LivingEntity)
                         .forEach(entity -> {
-                            Vector vector = entity.getLocation().toVector().subtract(loc.toVector()).normalize().setY(1);
-                            entity.setVelocity(vector.multiply(1.5));
+                            Vector vector = entity.getLocation().toVector().subtract(playerLoc.toVector()).normalize();
+                            vector.setY(1.5 + Math.random() * 0.5); // More chaotic lift
+                            entity.setVelocity(vector.multiply(1.3));
                         });
 
-
-                angle += Math.PI / 8;
+                angle += Math.PI / 6; // Faster rotation
             }
         }.runTaskTimer(plugin, 0, 2);
     }
+
+
 
 
     public void summonIceSpike(Player player) {
@@ -425,37 +437,6 @@ public class Spells {
             }, plugin);
         });
     }
-
-    public void summonFreezeBlast(Player player) {
-        Location location = player.getLocation();
-        World world = player.getWorld();
-
-        world.spawnParticle(Particle.SNOWFLAKE, location, 150, 3, 3, 3, 0.1);
-
-        world.spawnParticle(Particle.CLOUD, location, 50, 2, 2, 2, 0.05);
-
-        for (int i = 0; i < 5; i++) {
-            world.spawnParticle(Particle.SNOWFLAKE, location.clone().add(0, i, 0), 20, 1, 0.5, 1, 0.1, Material.ICE.createBlockData());
-        }
-
-
-        world.playSound(location, Sound.BLOCK_GLASS_BREAK, 1.5f, 0.8f);
-
-
-        world.playSound(location, Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1.2f, 0.5f);
-
-
-        for (Entity entity : world.getNearbyEntities(location, 5, 5, 5)) {
-            if (entity instanceof LivingEntity && entity != player) {
-                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 255));
-
-                world.spawnParticle(Particle.SNOWFLAKE, entity.getLocation(), 50, 0.5, 1, 0.5, 0.05);
-
-                world.playSound(entity.getLocation(), Sound.BLOCK_SNOW_BREAK, 1f, 1f);
-            }
-        }
-    }
-
 
 
     public void summonConfusion(Player player) {

@@ -59,7 +59,7 @@ public class MagicWandsListener implements Listener {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 12;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.GREEN + "Selected spell: " + getSpellName("god", nextSpell)  + nextSpell);
+                player.sendMessage(ChatColor.GREEN + "Selected spell: " + getSpellName("god", nextSpell)  + " " + nextSpell);
                 player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
                 player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
             }
@@ -75,11 +75,12 @@ public class MagicWandsListener implements Listener {
         switch (event.getAction()) {
             case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
-                int nextSpell = (currentSpell + 1) % 8;
+                int nextSpell = (currentSpell + 1) % 7;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.RED + "Selected spell: " + getSpellName("raftagar", nextSpell)  + nextSpell);
-                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
-                player.getWorld().spawnParticle(Particle.ENTITY_EFFECT, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
+                player.sendMessage(ChatColor.RED + "Selected spell: " + getSpellName("raftagar", nextSpell)  + " " + nextSpell);
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
+                player.getWorld().spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
+                player.getWorld().spawnParticle(Particle.SPIT, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
@@ -96,10 +97,9 @@ public class MagicWandsListener implements Listener {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 8;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.BLUE + "Selected spell: " + getSpellName("empire", nextSpell) + nextSpell);
-                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
-                player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 2, 0.3, 0.3, 0.3, 0.02); // Small spark particles
-                player.getWorld().spawnParticle(Particle.SPIT, player.getLocation(), 1, 0.3, 0.3, 0.3, 0.01); // Smoke trail
+                player.sendMessage(ChatColor.BLUE + "Selected spell: " + getSpellName("empire", nextSpell) + " " + nextSpell);
+                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_TELEPORT, 1.0f, 1.0f);
+                player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 20, 2, 2, 2, 0.02);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
@@ -137,9 +137,8 @@ public class MagicWandsListener implements Listener {
                     case 2 -> spells.summonChainLightning(player);
                     case 3 -> spells.summonTornado(player);
                     case 4 -> spells.summonIceSpike(player);
-                    case 5 -> spells.summonFreezeBlast(player);
-                    case 6 -> spells.summonFrostShield(player);
-                    case 7 -> spells.summonLightningStorm(player);
+                    case 5 -> spells.summonFrostShield(player);
+                    case 6 -> spells.summonLightningStorm(player);
                     default -> player.sendMessage(ChatColor.RED + "Invalid spell index.");
                 }
             }
@@ -186,9 +185,8 @@ public class MagicWandsListener implements Listener {
                     case 2 -> "Chain Lightning";
                     case 3 -> "Tornado";
                     case 4 -> "Ice Spike";
-                    case 5 -> "Freeze Blast";
-                    case 6 -> "Frost Shield";
-                    case 7 -> "Lightning Storm";
+                    case 5 -> "Frost Shield";
+                    case 6 -> "Lightning Storm";
                     default -> "Unknown Spell";
                 };
             case "empire":
