@@ -1,0 +1,84 @@
+god:
+  Regeneration:
+    radius: 5.0
+    duration: 10.0
+  Healing Aura:
+    radius: 3.0
+    duration: 15.0
+  Manaburst:
+    radius: 5.0
+    duration: 10.0
+  Protection Shield:
+    radius: 5.0
+    duration: 10.0
+  Divine Smite:
+    radius: 5.0
+    duration: 10.0
+  Blessing:
+    radius: 5.0
+    duration: 10.0
+  Divine Light:
+    radius: 5.0
+    duration: 10.0
+  Sacrifice:
+    radius: 5.0
+    duration: 10.0
+  Holy Wrath:
+    radius: 5.0
+    duration: 10.0
+  Purify:
+    radius: 5.0
+    duration: 10.0
+  Cleansing Touch:
+    radius: 5.0
+    duration: 10.0
+  Guardian Angel:
+    radius: 5.0
+    duration: 10.0
+raftagar:
+  Fireball:
+    radius: 2.0
+    duration: 5.0
+  Lightning Strike:
+    radius: 1.0
+    duration: 3.0
+  Chain Lightning:
+    radius: 5.0
+    duration: 10.0
+  Tornado:
+    radius: 5.0
+    duration: 10.0
+  Ice Spike:
+    radius: 5.0
+    duration: 10.0
+  Frost Shield:
+    radius: 5.0
+    duration: 10.0
+  Lightning Storm:
+    radius: 5.0
+    duration: 10.0
+empire:
+  Tornado:
+    radius: 4.0
+    duration: 8.0
+  Potion:
+    radius: 3.0
+    duration: 6.0
+  Arrow:
+    radius: 5.0
+    duration: 10.0
+  Confusion:
+    radius: 5.0
+    duration: 10.0
+  Beast:
+    radius: 5.0
+    duration: 10.0
+  Flame Shove:
+    radius: 5.0
+    duration: 10.0
+  Time Freeze:
+    radius: 5.0
+    duration: 10.0
+  Invisibility:
+    radius: 5.0
+    duration: 10.0

@@ -9,8 +9,8 @@ import org.bukkit.entity.Player;
 public class Commands implements CommandExecutor {
     private final GUIManager guiManager;
 
-    public Commands() {
-        this.guiManager = new GUIManager(Wandplugin.getInstance());  // Use singleton to get plugin instance
+    public Commands(GUIManager guiManager) {
+        this.guiManager = guiManager;
     }
 
     @Override
@@ -18,13 +18,29 @@ public class Commands implements CommandExecutor {
         if (sender instanceof Player player) {
             if (player.hasPermission("MagicWands.use")) {
                 if (cmd.getName().equalsIgnoreCase("magicwand")) {
-                    // Existing code for /magicwand command
-                    // ...
+                    if (args.length == 1) {
+                        String wandType = args[0].toLowerCase();
+                        WandItem wandItem = new WandItem();
+                        if (wandItem.giveWand(player, wandType)) {
+                            player.sendMessage(ChatColor.GREEN + "You have been given a " + wandType + " wand!");
+                        } else {
+                            player.sendMessage(ChatColor.RED + "Invalid wand type specified.");
+                        }
+                    } else {
+                        player.sendMessage(ChatColor.RED + "Usage: /magicwand <wandType>");
+                    }
+                    return true;
                 } else if (cmd.getName().equalsIgnoreCase("mw")) {
                     guiManager.openWandSelectionGUI(player);
                     return true;
                 } else if (cmd.getName().equalsIgnoreCase("mwconfig")) {
-                    guiManager.openSpellConfigGUI(player);
+                    if (args.length == 2) {
+                        String wandType = args[0];
+                        String spellName = args[1];
+                        guiManager.openSpellConfigurationGUI(player, wandType, spellName);
+                    } else {
+                        guiManager.openWandSelectionGUI(player);
+                    }
                     return true;
                 }
             } else {

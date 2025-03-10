@@ -26,16 +26,22 @@ public class ChatInputListener implements Listener {
     public void onPlayerChat(AsyncPlayerChatEvent event) {
         if (event.getPlayer() == player) {
             event.setCancelled(true);
+            String input = event.getMessage();
             try {
-                double value = Double.parseDouble(event.getMessage());
+                double value = Double.parseDouble(input);
+                if (value < 0) {
+                    throw new NumberFormatException("Negative value");
+                }
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
                     plugin.getGUIManager().updateSpellConfig(wandType, spellName, variable, value);
                     player.sendMessage(ChatColor.GREEN + "Updated " + variable + " for " + spellName + " to " + value);
                     plugin.getGUIManager().openSpellConfigurationGUI(player, wandType, spellName);
                 });
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Invalid number. Please try again.");
-                plugin.getGUIManager().openSpellConfigurationGUI(player, wandType, spellName);
+                player.sendMessage(ChatColor.RED + "Invalid number. Please enter a positive number.");
+                plugin.getServer().getScheduler().runTask(plugin, () ->
+                        plugin.getGUIManager().openSpellConfigurationGUI(player, wandType, spellName)
+                );
             }
             HandlerList.unregisterAll(this);
         }

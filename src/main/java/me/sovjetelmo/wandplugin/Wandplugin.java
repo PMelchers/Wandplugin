@@ -1,50 +1,29 @@
 package me.sovjetelmo.wandplugin;
 
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
 
 public final class Wandplugin extends JavaPlugin {
     private static Wandplugin instance;
     private GUIManager guiManager;
+    private ConfigVars configVars;
 
     @Override
     public void onEnable() {
-        // Plugin startup logic
+        instance = this;
         saveDefaultConfig();
-        instance = this; // Set the instance when the plugin is enabled
-        this.guiManager = new GUIManager(this);
-        getCommand("magicwand").setExecutor(new Commands());
-        getCommand("mw").setExecutor(this);
-        getCommand("mwconfig").setExecutor(this);
+        saveResource("spells.yml", false);
+        configVars = new ConfigVars();
+        guiManager = new GUIManager(this, configVars);
+        getCommand("magicwand").setExecutor(new Commands(guiManager));
+        getCommand("mw").setExecutor(new Commands(guiManager));
+        getCommand("mwconfig").setExecutor(new Commands(guiManager));
         getServer().getPluginManager().registerEvents(new MagicWandsListener(this), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
-    }
-
-    @Override
-    public void onDisable() {
-        // Plugin shutdown logic
-    }
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage("This command can only be used by players.");
-            return true;
-        }
-
-        Player player = (Player) sender;
-
-        if (command.getName().equalsIgnoreCase("mw")) {
-            guiManager.openWandSelectionGUI(player);
-            return true;
-        } else if (command.getName().equalsIgnoreCase("mwconfig")) {
-            guiManager.openSpellConfigGUI(player);
-            return true;
-        }
-
-        return false;
     }
 
     public static Wandplugin getInstance() {
@@ -53,5 +32,9 @@ public final class Wandplugin extends JavaPlugin {
 
     public GUIManager getGUIManager() {
         return guiManager;
+    }
+
+    public ConfigVars getConfigVars() {
+        return configVars;
     }
 }

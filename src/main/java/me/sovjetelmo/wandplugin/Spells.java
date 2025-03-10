@@ -18,23 +18,27 @@ import org.bukkit.util.Vector;
 import java.util.Objects;
 
 public class Spells {
-    Plugin plugin;
-    public Spells(Plugin plugin) {
+    private final Wandplugin plugin;
+    private final ConfigVars configVars;
+
+    public Spells(Wandplugin plugin) {
         this.plugin = plugin;
+        this.configVars = plugin.getConfigVars();
     }
+
     /* general functions */
 
     private void createExplosionEffect(Location impactLocation, Player shooter) {
         // Spawn explosion particles
         World world = impactLocation.getWorld();
         if (world != null) {
-            world.spawnParticle(Particle.EXPLOSION, impactLocation, 50, (float) 4.0, (float) 4.0, (float) 4.0, 0.1);
-            world.spawnParticle(Particle.SMOKE, impactLocation, 50, (float) 4.0, (float) 4.0, (float) 4.0, 0.1);
+            world.spawnParticle(Particle.EXPLOSION, impactLocation, 50, 4.0, 4.0, 4.0, 0.1);
+            world.spawnParticle(Particle.SMOKE, impactLocation, 50, 4.0, 4.0, 4.0, 0.1);
             world.playSound(impactLocation, Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 1f);
         }
 
         // Damage nearby entities
-        for (Entity entity : impactLocation.getWorld().getNearbyEntities(impactLocation, (float) 4.0, (float) 4.0, (float) 4.0)) {
+        for (Entity entity : impactLocation.getWorld().getNearbyEntities(impactLocation, 4.0, 4.0, 4.0)) {
             if (entity instanceof LivingEntity && entity != shooter) {
                 LivingEntity livingEntity = (LivingEntity) entity;
                 livingEntity.damage(10); // Example damage amount
@@ -46,20 +50,21 @@ public class Spells {
     /* GOD WAND */
 
     public void summonRegeneration(Player player) {
-
-        int duration = 200; // in ticks
+        double duration = configVars.getSpellProperty("god", "Regeneration", "duration") * 20; // Convert seconds to ticks
         int amplifier = 1;
 
-        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, duration, amplifier));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) duration, amplifier));
 
-        // Visuals  and Sound
+        // Visuals and Sound
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_SPLASH, 1.0f, 1.0f);
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 20, 0.5, 0.5, 0.5, 0.1);
     }
 
     public void summonHealingAura(Player player) {
-        int radius = 5;
-        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+        double radius = configVars.getSpellProperty("god", "Healing Aura", "radius");
+        double duration = configVars.getSpellProperty("god", "Healing Aura", "duration") * 20; // Convert seconds to ticks
+
+        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) duration, 1));
 
         // Visuals
         player.getWorld().spawnParticle(Particle.HEART, player.getLocation(), 50, radius, radius, radius);
@@ -67,15 +72,13 @@ public class Spells {
         player.getNearbyEntities(radius, radius, radius).stream()
                 .filter(entity -> entity instanceof Player || entity instanceof Tameable)
                 .forEach(entity -> {
-                    ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+                    ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) duration, 1));
                 });
     }
 
     public void summonManaburst(Player player) {
-
-        int radius = 5;
+        double radius = configVars.getSpellProperty("god", "Manaburst", "radius");
         double damage = 15.0; // Damage dealt
-
 
         // Visuals
         player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
@@ -93,10 +96,9 @@ public class Spells {
     }
 
     public void summonProtectionShield(Player player) {
+        double duration = configVars.getSpellProperty("god", "Protection Shield", "duration") * 20; // Convert seconds to ticks
 
-        double shieldDuration = 200; // Duration in ticks
-
-        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, (int) shieldDuration, 2));
+        player.addPotionEffect(new PotionEffect(PotionEffectType.RESISTANCE, (int) duration, 2));
 
         // Visuals and sound
         player.getWorld().spawnParticle(Particle.PORTAL, player.getLocation(), 20, 1.0, 1.0, 1.0, 0.1);
@@ -104,8 +106,7 @@ public class Spells {
     }
 
     public void summonDivineSmite(Player player) {
-
-        int radius = 5; // radius spell
+        double radius = configVars.getSpellProperty("god", "Divine Smite", "radius");
         double damage = 25.0; // Damage dealt
 
         player.getWorld().strikeLightning(Objects.requireNonNull(player.getTargetBlockExact(50)).getLocation());
@@ -124,19 +125,17 @@ public class Spells {
     }
 
     public void summonBlessing(Player player) {
+        double duration = configVars.getSpellProperty("god", "Blessing", "duration") * 20; // Convert seconds to ticks
 
-        int duration = 300; // Duration in ticks
-
-        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, duration, 1)); // Strength II
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, 1)); // Speed II
+        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, (int) duration, 1)); // Strength II
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) duration, 1)); // Speed II
 
         player.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, player.getLocation(), 30, 1.0, 1.0, 1.0, 0.1);
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
     }
 
     public void summonDivineLight(Player player) {
-
-        int radius = 5;
+        double radius = configVars.getSpellProperty("god", "Divine Light", "radius");
 
         // Apply healing to casting player
         player.addPotionEffect(new PotionEffect(PotionEffectType.INSTANT_HEALTH, 1, 1)); // Instant Heal effect
@@ -154,10 +153,8 @@ public class Spells {
     }
 
     public void summonSacrifice(Player player) {
-
         double healthSacrificed = 10.0; // Amount to sacrifice
-        int duration = 300; // Duration in ticks
-
+        double duration = configVars.getSpellProperty("god", "Sacrifice", "duration") * 20; // Convert seconds to ticks
 
         double newHealth = player.getHealth() - healthSacrificed;
         if (newHealth < 0) {
@@ -166,8 +163,8 @@ public class Spells {
         player.setHealth(newHealth);
 
         // Apply buff
-        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, duration, 1)); // Strength II
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, duration, 1)); // Speed II
+        player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, (int) duration, 1)); // Strength II
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, (int) duration, 1)); // Speed II
 
         // Visual and sound
         player.getWorld().spawnParticle(Particle.DRIPPING_LAVA, player.getLocation(), 20, 1.0, 1.0, 1.0, 0.1);
@@ -175,9 +172,8 @@ public class Spells {
     }
 
     public void summonHolyWrath(Player player) {
-
         double damage = 30.0;
-        int radius = 5;
+        double radius = configVars.getSpellProperty("god", "Holy Wrath", "radius");
 
         player.getWorld().createExplosion(player.getLocation(), 4.0f, false, false);
 
@@ -196,7 +192,6 @@ public class Spells {
     }
 
     public void summonPurify(Player player) {
-
         player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
 
         // Visual and sound
@@ -205,9 +200,7 @@ public class Spells {
     }
 
     public void summonCleansingTouch(Player player) {
-        //  STILL BEING TESTED
-
-        int radius = 5;
+        double radius = configVars.getSpellProperty("god", "Cleansing Touch", "radius");
 
         player.getNearbyEntities(radius, radius, radius).stream()
                 .filter(entity -> entity instanceof LivingEntity)
@@ -223,8 +216,6 @@ public class Spells {
     }
 
     public void summonGuardianAngel(Player player) {
-        // STILL BEING TESTED
-
         Wolf guardianAngel = (Wolf) player.getWorld().spawnEntity(player.getLocation(), EntityType.WOLF);
         guardianAngel.setCustomName("Guardian Angel");
         guardianAngel.setAngry(false); // Ensure not hostile its a guardian
@@ -237,25 +228,21 @@ public class Spells {
 
     /* Raftagar Wand */
 
-
     public void summonFireball(Player player) {
-        final float explosionRadius = 4.0f;
+        double radius = configVars.getSpellProperty("raftagar", "Fireball", "radius");
 
         Location eyeLocation = player.getEyeLocation();
         Vector direction = eyeLocation.getDirection().normalize();
 
         Fireball fireball = player.getWorld().spawn(eyeLocation.add(direction.multiply(2)), Fireball.class);
         fireball.setShooter(player);
-        fireball.setYield(explosionRadius); // Set radius
-        fireball.setIsIncendiary(false); // Prevent fire
+        fireball.setYield((float) radius);
+        fireball.setIsIncendiary(false);
 
-        // Add metadata to identify the custom fireball
         fireball.setMetadata("customFireball", new FixedMetadataValue(plugin, true));
 
-        // Play sound when shooting
         fireball.getWorld().playSound(eyeLocation, Sound.ENTITY_WITCH_AMBIENT, 1f, 1f);
 
-        // Add fireball trail
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             if (fireball.isDead() || fireball.isOnGround()) return;
 
@@ -264,17 +251,14 @@ public class Spells {
         }, 0, 2);
     }
 
-    // Listen for Fireball impact
     @EventHandler
     public void onProjectileHit(ProjectileHitEvent event) {
         if (event.getEntity() instanceof Fireball fireball && fireball.getShooter() instanceof Player player) {
-            // Check if this is a custom fireball
             if (fireball.hasMetadata("customFireball")) {
                 createExplosionEffect(fireball.getLocation(), player);
             }
         }
     }
-
 
     public void summonLightningStrike(Player player) {
         Location targetLocation = player.getTargetBlockExact(50).getLocation();
@@ -282,9 +266,9 @@ public class Spells {
     }
 
     public void summonChainLightning(Player player) {
-        double damage = 20.0; // Damage dealt each strike
-        int maxChains = 5; // Max number of enemies
-        double range = 10.0; // Maximum range in blocks between strikes
+        double damage = 20.0;
+        int maxChains = 5;
+        double range = 10.0;
 
         LivingEntity target = getTargetEntity(player);
         if (target == null || target == player) {
@@ -298,14 +282,12 @@ public class Spells {
         for (int i = 1; i < maxChains; i++) {
             currentTarget = getNextTargetInRange(currentTarget, range, player);
             if (currentTarget == null) {
-                break; // If no more targets are in range
+                break;
             }
 
-            // Strike the next target with lightning
             strikeLightning(currentTarget, damage, player);
         }
 
-        // Visual and sound
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
         player.getWorld().spawnParticle(Particle.END_ROD, player.getLocation(), 30, 1.0, 1.0, 1.0, 0.1);
     }
@@ -322,40 +304,39 @@ public class Spells {
         return currentTarget.getNearbyEntities(range, range, range).stream()
                 .filter(entity -> entity instanceof LivingEntity)
                 .map(entity -> (LivingEntity) entity)
-                .filter(entity -> entity != currentTarget && entity != player) // Exclude player and current target
+                .filter(entity -> entity != currentTarget && entity != player)
                 .findFirst()
-                .orElse(null); // Return null if no target found
+                .orElse(null);
     }
 
     private void strikeLightning(LivingEntity target, double damage, Player player) {
         target.getWorld().strikeLightning(target.getLocation());
         target.damage(damage);
 
-        // Visual and sound
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
         target.getWorld().spawnParticle(Particle.END_ROD, target.getLocation(), 20, 1.0, 1.0, 1.0, 0.1);
     }
 
-    /* Empire Wand */
-
     public void summonTornado(Player player) {
+        double radius = configVars.getSpellProperty("empire", "Tornado", "radius");
+        double duration = configVars.getSpellProperty("empire", "Tornado", "duration") * 20;
+
         new BukkitRunnable() {
             double angle = 0;
-            int duration = 100; // Tornado lasts for 100 ticks (5 seconds)
+            int ticks = (int) duration;
 
             @Override
             public void run() {
-                if (duration-- <= 0 || !player.isOnline()) {
+                if (ticks-- <= 0 || !player.isOnline()) {
                     this.cancel();
                     return;
                 }
 
-                Location playerLoc = player.getLocation(); // Tornado follows the player
+                Location playerLoc = player.getLocation();
                 World world = playerLoc.getWorld();
 
-                // Create the spinning tornado effect
-                for (int i = 0; i < 25; i++) { // Increased height
-                    double radius = 1.8 + (i * 0.25); // Wider tornado
+                for (int i = 0; i < 25; i++) {
+                    double radius = 1.8 + (i * 0.25);
                     double x = Math.cos(angle + (i * 0.4)) * radius;
                     double z = Math.sin(angle + (i * 0.4)) * radius;
                     Location particleLoc = playerLoc.clone().add(x, i * 0.5, z);
@@ -366,31 +347,26 @@ public class Spells {
                 }
                 player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 255));
 
-                // Lift nearby entities violently
-                player.getNearbyEntities(5, 15, 5).stream()
+                player.getNearbyEntities(radius, 15, radius).stream()
                         .filter(entity -> entity instanceof LivingEntity)
                         .forEach(entity -> {
-                            Vector vector = entity.getLocation().toVector().subtract(playerLoc.toVector()).normalize();
-                            vector.setY(1.5 + Math.random() * 0.5); // More chaotic lift
-                            entity.setVelocity(vector.multiply(1.3));
+                            entity.setVelocity(new Vector(0, 1, 0));
                         });
 
-                angle += Math.PI / 6; // Faster rotation
+                angle += Math.PI / 6;
             }
         }.runTaskTimer(plugin, 0, 2);
     }
 
-
-
-
     public void summonIceSpike(Player player) {
-        // Launch
+        double radius = configVars.getSpellProperty("raftagar", "Ice Spike", "radius");
+        double duration = configVars.getSpellProperty("raftagar", "Ice Spike", "duration") * 20;
+
         Snowball iceSpike = player.launchProjectile(Snowball.class);
         iceSpike.setMetadata("ice-spike", new FixedMetadataValue(plugin, "ice-spike"));
         iceSpike.setCustomName("Ice Spike");
         iceSpike.setVelocity(player.getLocation().getDirection().multiply(1.5));
 
-        // Create trail
         Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             @Override
             public void run() {
@@ -406,28 +382,25 @@ public class Spells {
             private void cancel() {
                 Bukkit.getScheduler().cancelTask(this.hashCode());
             }
-        }, 0L, 1L); // Run every tick
+        }, 0L, 1L);
 
-        // Add an event listener to handle collisions
         Bukkit.getScheduler().runTask(plugin, () -> {
             Bukkit.getPluginManager().registerEvents(new Listener() {
                 @EventHandler
                 public void onProjectileHit(ProjectileHitEvent event) {
                     if (!(event.getEntity() instanceof Snowball) ||
-                            !"ice-spike".equals(event.getEntity().getMetadata("ice-spike").get(0).asString())) {
+                            !event.getEntity().hasMetadata("ice-spike")) {
                         return;
                     }
 
                     Snowball hitSpike = (Snowball) event.getEntity();
                     Location hitLocation = hitSpike.getLocation();
 
-
                     if (event.getHitEntity() != null && event.getHitEntity() instanceof LivingEntity) {
                         LivingEntity entity = (LivingEntity) event.getHitEntity();
-                        entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 2)); // Freeze effect
-                        entity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 1)); // Weaken effect
+                        entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, (int) duration, 2));
+                        entity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, (int) duration, 1));
                     }
-
 
                     hitLocation.getWorld().spawnParticle(Particle.SNOWFLAKE, hitLocation, 50, 1, 1, 1, 0.1);
                     hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_GLASS_BREAK, 1, 1);
@@ -438,9 +411,10 @@ public class Spells {
         });
     }
 
-
     public void summonConfusion(Player player) {
-        // Get the target block or entity the player is looking at
+        double radius = configVars.getSpellProperty("empire", "Confusion", "radius");
+        double duration = configVars.getSpellProperty("empire", "Confusion", "duration") * 20;
+
         Location targetLocation = player.getTargetBlockExact(30) != null
                 ? player.getTargetBlockExact(30).getLocation()
                 : null;
@@ -453,9 +427,6 @@ public class Spells {
         World world = targetLocation.getWorld();
         if (world == null) return;
 
-        int radius = 3; // Radius of 1 block all directions
-
-        // Create particle effects
         for (double x = -radius; x <= radius; x++) {
             for (double y = -radius; y <= radius; y++) {
                 for (double z = -radius; z <= radius; z++) {
@@ -466,33 +437,25 @@ public class Spells {
             }
         }
 
-        // Apply effects to nearby
         for (Entity entity : world.getNearbyEntities(targetLocation, radius + 0.5, radius + 0.5, radius + 0.5)) {
             if (entity instanceof LivingEntity livingEntity) {
-                // Apply nausea
-                livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 200, 20)); // Nausea for 10 seconds
-                // Apply damage
-                livingEntity.damage(4.0); // Deal 2 hearts of damage
+                livingEntity.addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, (int) duration, 50));
+                livingEntity.damage(4.0);
             }
         }
 
-        // Notify
-        player.sendMessage(ChatColor.DARK_PURPLE + "You have cast Confusion on targe!");
+        player.sendMessage(ChatColor.DARK_PURPLE + "You have cast Confusion on target!");
     }
 
-
     public void summonFrostShield(Player player) {
+        double radius = configVars.getSpellProperty("raftagar", "Frost Shield", "radius");
 
         Location location = player.getLocation();
 
-        int radius = 5;
-
-        for (int x = -radius; x <= radius; x++) {
-            for (int y = -radius; y <= radius; y++) {
-                for (int z = -radius; z <= radius; z++) {
-
+        for (int x = -(int) radius; x <= (int) radius; x++) {
+            for (int y = -(int) radius; y <= (int) radius; y++) {
+                for (int z = -(int) radius; z <= (int) radius; z++) {
                     Location offsetLocation = location.clone().add(x, y, z);
-
 
                     if (y == 0 && Math.abs(x) <= 1 && Math.abs(z) <= 1) {
                         continue;
@@ -507,10 +470,12 @@ public class Spells {
     }
 
     public void summonLightningStorm(Player player) {
+        double radius = configVars.getSpellProperty("raftagar", "Lightning Storm", "radius");
+
         Location location = player.getLocation();
-        for (int i = 0; i < 5; i++) { // Simulate multiple lightning strikes
-            double offsetX = (Math.random() - 0.5) * 20;
-            double offsetZ = (Math.random() - 0.5) * 20;
+        for (int i = 0; i < 5; i++) {
+            double offsetX = (Math.random() - 0.5) * radius;
+            double offsetZ = (Math.random() - 0.5) * radius;
             Location strikeLocation = location.clone().add(offsetX, 0, offsetZ);
             strikeLocation.getWorld().strikeLightning(strikeLocation);
         }
@@ -518,12 +483,14 @@ public class Spells {
     }
 
     public void summonPotion(Player player) {
+        double duration = configVars.getSpellProperty("empire", "Potion", "duration") * 20;
+
         ItemStack potion = new ItemStack(Material.SPLASH_POTION);
 
         PotionMeta potionMeta = (PotionMeta) potion.getItemMeta();
-        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 600, 1), true);
-        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, 600, 2), true);
-        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, 300, 1), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, (int) duration, 1), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.STRENGTH, (int) duration, 2), true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.REGENERATION, (int) duration / 2, 1), true);
 
         potion.setItemMeta(potionMeta);
 
@@ -534,14 +501,14 @@ public class Spells {
     }
 
     public void summonArrow(Player player) {
-        // Moet nog getweaked
+        double radius = configVars.getSpellProperty("empire", "Arrow", "radius");
+
         Vector eyeDirection = player.getEyeLocation().getDirection();
         Arrow arrow = player.getWorld().spawnArrow(player.getEyeLocation(), eyeDirection, 1.0f, 0.0f);
         arrow.setMetadata("arrow-spell", new FixedMetadataValue(plugin, "arrow"));
         arrow.setShooter(player);
         arrow.setVelocity(eyeDirection.multiply(2.0));
 
-        // Create a particle trail effect for the arrow
         Bukkit.getScheduler().runTaskTimer(plugin, new Runnable() {
             @Override
             public void run() {
@@ -551,16 +518,15 @@ public class Spells {
                 }
 
                 Location arrowLocation = arrow.getLocation();
-                arrow.getWorld().spawnParticle(Particle.WITCH, arrowLocation, 2, 0.1, 0.1, 0.1, 0.02); // Small spark particles
-                arrow.getWorld().spawnParticle(Particle.SPIT, arrowLocation, 1, 0.1, 0.1, 0.1, 0.01); // Smoke trail
+                arrow.getWorld().spawnParticle(Particle.WITCH, arrowLocation, 2, 0.1, 0.1, 0.1, 0.02);
+                arrow.getWorld().spawnParticle(Particle.SPIT, arrowLocation, 1, 0.1, 0.1, 0.1, 0.01);
             }
 
             private void cancel() {
                 Bukkit.getScheduler().cancelTask(this.hashCode());
             }
-        }, 0L, 1L); // Run every tick
+        }, 0L, 1L);
 
-        // event listener for collision handling
         Bukkit.getScheduler().runTask(plugin, () -> {
             Bukkit.getPluginManager().registerEvents(new Listener() {
                 @EventHandler
@@ -569,26 +535,21 @@ public class Spells {
                         return;
                     }
 
-                    // Check if the arrow has the "arrow-spell" metadata
                     if (!arrow.hasMetadata("arrow-spell")) {
                         return;
                     }
 
-                    // Handle the arrow hit logic
                     Location hitLocation = arrow.getLocation();
 
-                    // Explosion effect
                     hitLocation.getWorld().spawnParticle(Particle.EXPLOSION, hitLocation, 1, 2.0, 2.5, 2.0, 0.1);
                     hitLocation.getWorld().playSound(hitLocation, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
 
-                    // Damage nearby entities
-                    for (LivingEntity entity : hitLocation.getWorld().getNearbyLivingEntities(hitLocation, 4)) {
+                    for (LivingEntity entity : hitLocation.getWorld().getNearbyLivingEntities(hitLocation, radius)) {
                         if (arrow.getShooter() instanceof Player shooter && !entity.equals(shooter)) {
-                            entity.damage(4.0); // Adjust the damage value as needed
+                            entity.damage(10.0);
                         }
                     }
 
-                    // Remove the arrow to prevent clutter
                     arrow.remove();
                 }
 
@@ -597,8 +558,7 @@ public class Spells {
     }
 
     public void summonBeast(Player player) {
-
-        // voor de grap
+        double radius = configVars.getSpellProperty("empire", "Beast", "radius");
 
         World world = player.getWorld();
         Location spawnLocation = player.getLocation();
@@ -616,27 +576,35 @@ public class Spells {
     }
 
     public void summonFlameShove(Player player) {
+        double radius = configVars.getSpellProperty("empire", "Flame Shove", "radius");
+        double duration = configVars.getSpellProperty("empire", "Flame Shove", "duration") * 20;
+
         EnderPearl flame = player.launchProjectile(EnderPearl.class);
-        flame.setFireTicks(200);
+        flame.setFireTicks((int) duration);
         flame.setMetadata("flame-spell", new FixedMetadataValue(plugin, "flame"));
+
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.0f);
+        player.getWorld().spawnParticle(Particle.FLAME, player.getLocation(), 20, radius, radius, radius, 0.1);
     }
 
-
     public void summonTimeFreeze(Player player) {
-        // Stop nearby entities from moving
+        double radius = configVars.getSpellProperty("empire", "Time Freeze", "radius");
+        double duration = configVars.getSpellProperty("empire", "Time Freeze", "duration") * 20;
+
         Location location = player.getLocation();
-        for (Entity entity : location.getWorld().getNearbyEntities(location, 10, 10, 10)) {
+        for (Entity entity : location.getWorld().getNearbyEntities(location, radius, radius, radius)) {
             if (entity instanceof LivingEntity) {
-                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 100, 255));
+                ((LivingEntity) entity).addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, (int) duration, 255));
             }
         }
 
         player.getWorld().playSound(location, Sound.ENTITY_SNOW_GOLEM_SHOOT, 1.0f, 1.0f);
+        player.getWorld().spawnParticle(Particle.SNOWFLAKE, location, 30, radius, radius, radius, 0.1);
     }
 
     public void summonInvisibility(Player player) {
-        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 200, 1));
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
-    }
+        double duration = configVars.getSpellProperty("empire", "Invisibility", "duration") * 20; // Convert seconds to ticks
 
-}
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, (int) duration, 1));
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SHEEP_SHEAR, 1.0f, 1.0f);
+    }}

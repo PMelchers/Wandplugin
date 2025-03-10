@@ -1,97 +1,56 @@
 package me.sovjetelmo.wandplugin;
 
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.configuration.file.YamlConfiguration;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConfigVars {
     private final Wandplugin plugin = Wandplugin.getInstance();
-    public FileConfiguration config;
+    private FileConfiguration spellsConfig;
+    private final File spellsFile;
 
     public ConfigVars() {
+        spellsFile = new File(plugin.getDataFolder(), "spells.yml");
         loadConfig();
     }
 
-    //TO BE IMPLEMENTED ************************************
     private void loadConfig() {
-        plugin.saveDefaultConfig();
-        config = plugin.getConfig();
-//        config.addDefault("summonPotion_Food_Penalty", 2);
-//        config.addDefault("summonPotion_Cooldown", 30);
-//        config.addDefault("summonArrow_Food_Penalty", 1);
-//        config.addDefault("summonArrow_Cooldown", 0);
-//        config.addDefault("summonBeast_Food_Penalty", 8);
-//        config.addDefault("summonBeast_Cooldown", 300);
-//        config.addDefault("summonLightning_Food_Penalty", 6);
-//        config.addDefault("summonLightning_Cooldown", 60);
-//        config.addDefault("enableFoodSpell", true);
-
-
-        config.options().copyDefaults(true);
-        plugin.saveConfig();
+        if (!spellsFile.exists()) {
+            plugin.saveResource("spells.yml", false);
+        }
+        spellsConfig = YamlConfiguration.loadConfiguration(spellsFile);
     }
 
-    public int getPotionFoodPenalty() {
-        return config.getInt("summonPotion_Food_Penalty");
+    public void saveConfig() {
+        try {
+            spellsConfig.save(spellsFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public int getPotionCooldown() {
-        return config.getInt("summonPotion_Cooldown");
-
+    public double getSpellProperty(String wandType, String spellName, String property) {
+        return spellsConfig.getDouble(wandType + "." + spellName + "." + property);
     }
 
-    public int getArrowFoodPenalty() {
-        return config.getInt("summonArrow_Food_Penalty");
+    public void setSpellProperty(String wandType, String spellName, String property, double value) {
+        if (spellsConfig.contains(wandType + "." + spellName)) {
+            spellsConfig.set(wandType + "." + spellName + "." + property, value);
+        }
+        saveConfig();
     }
 
-    public int getArrowCooldown() {
-        return config.getInt("summonArrow_Cooldown");
-    }
-
-    public double getArrowDamage() {
-        return config.getDouble("summonArrow_damage");
-    }
-
-    public int getBeastFoodPenalty() {
-        return config.getInt("summonBeast_Food_Penalty");
-    }
-
-    public int getBeastCooldown() {
-        return config.getInt("summonBeast_Cooldown");
-    }
-
-    public int getLightningFoodPenalty() {
-        return config.getInt("summonLightning_Food_Penalty");
-    }
-
-    public int getLightningCooldown() {
-        return config.getInt("summonLightning_Cooldown");
-    }
-
-    public int getFlameFoodPenalty() {
-        return config.getInt("summonFlame_Food_Penalty");
-    }
-
-    public int getFlameCooldown() {
-        return config.getInt("summonFlame_Cooldown");
-    }
-
-    public int getExplosionFoodPenalty() {
-        return config.getInt("summonExplosion_Food_Penalty");
-    }
-
-    public int getExplosionCooldown() {
-        return config.getInt("summonExplosion_Cooldown");
-    }
-
-    public double getFlameKnockback() {
-        return config.getDouble("summonFlame_Knockback_Level");
-    }
-
-    public Boolean isFoodSpellEnabled() {
-        return config.getBoolean("enableFoodSpell");
-    }
-
-    public Boolean isBeastSpellEnabled() {
-        return config.getBoolean("enableBeastSpell");
+    public List<String> getSpells(String wandType) {
+        List<String> spells = new ArrayList<>();
+        ConfigurationSection section = spellsConfig.getConfigurationSection(wandType);
+        if (section != null) {
+            spells.addAll(section.getKeys(false));
+        }
+        return spells;
     }
 }

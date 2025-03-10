@@ -9,69 +9,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 public class GUIManager {
-    private final Wandplugin plugin;
-    private final WandItem wandItem;
-    private final Map<String, Map<String, Map<String, Double>>> spellConfigs;
+    private final ConfigVars configVars;
 
-    public GUIManager(Wandplugin plugin) {
-        this.plugin = plugin;
-        this.spellConfigs = new HashMap<>();
-        this.wandItem = new WandItem();
-        initializeSpellConfigs();
-    }
-
-    private void initializeSpellConfigs() {
-        // Initialize with default values
-        Map<String, Map<String, Double>> godSpells = new HashMap<>();
-        godSpells.put("Regeneration", createSpellConfig(5.0, 10.0));
-        godSpells.put("Healing Aura", createSpellConfig(3.0, 15.0));
-        // Add more God wand spells...
-
-        Map<String, Map<String, Double>> raftagarSpells = new HashMap<>();
-        raftagarSpells.put("Fireball", createSpellConfig(2.0, 5.0));
-        raftagarSpells.put("Lightning Strike", createSpellConfig(1.0, 3.0));
-        // Add more Raftagar wand spells...
-
-        Map<String, Map<String, Double>> empireSpells = new HashMap<>();
-        empireSpells.put("Tornado", createSpellConfig(4.0, 8.0));
-        empireSpells.put("Potion", createSpellConfig(3.0, 6.0));
-        // Add more Empire wand spells...
-
-        spellConfigs.put("god", godSpells);
-        spellConfigs.put("raftagar", raftagarSpells);
-        spellConfigs.put("empire", empireSpells);
-    }
-
-    private Map<String, Double> createSpellConfig(double radius, double duration) {
-        Map<String, Double> config = new HashMap<>();
-        config.put("radius", radius);
-        config.put("duration", duration);
-        return config;
+    public GUIManager(Wandplugin plugin, ConfigVars configVars) {
+        this.configVars = configVars;
     }
 
     public void openWandSelectionGUI(Player player) {
-        // Create a new inventory with 9 slots for the GUI
-        Inventory gui = Bukkit.createInventory(null, 9, ChatColor.GREEN + "Select Your Wand");
-
-        // Use WandItem to create wand items for each type
-        ItemStack godWand = wandItem.createWandItem("god");
-        ItemStack raftagarWand = wandItem.createWandItem("raftagar");
-        ItemStack empireWand = wandItem.createWandItem("empire");
-
-        // Add the wand items to the GUI
-        gui.setItem(0, godWand);
-        gui.setItem(1, raftagarWand);
-        gui.setItem(2, empireWand);
-
-        // Open the GUI for the player
-        player.openInventory(gui);
-    }
-
-    public void openSpellConfigGUI(Player player) {
         Inventory gui = Bukkit.createInventory(null, 27, ChatColor.BLUE + "Wand Selection");
 
         gui.setItem(11, createGuiItem(Material.GOLD_NUGGET, ChatColor.AQUA + "God Wand"));
@@ -82,13 +28,10 @@ public class GUIManager {
     }
 
     public void openSpellListGUI(Player player, String wandType) {
-        Inventory gui = Bukkit.createInventory(null, 54, ChatColor.GREEN + wandType + " Spells");
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.GREEN + wandType + " Spells");
 
-        Map<String, Map<String, Double>> spells = spellConfigs.get(wandType.toLowerCase());
-        int slot = 0;
-        for (String spellName : spells.keySet()) {
-            gui.setItem(slot, createGuiItem(Material.BOOK, ChatColor.YELLOW + spellName));
-            slot++;
+        for (String spellName : configVars.getSpells(wandType)) {
+            gui.addItem(createGuiItem(Material.ENCHANTED_BOOK, ChatColor.GOLD + spellName));
         }
 
         player.openInventory(gui);
@@ -97,30 +40,31 @@ public class GUIManager {
     public void openSpellConfigurationGUI(Player player, String wandType, String spellName) {
         Inventory gui = Bukkit.createInventory(null, 27, ChatColor.GOLD + spellName + " Configuration");
 
-        Map<String, Double> config = spellConfigs.get(wandType.toLowerCase()).get(spellName);
+        double radius = configVars.getSpellProperty(wandType, spellName, "radius");
+        double duration = configVars.getSpellProperty(wandType, spellName, "duration");
 
-        gui.setItem(11, createGuiItem(Material.BEACON, ChatColor.AQUA + "Radius: " + config.get("radius"),
-                ChatColor.GRAY + "Click to modify"));
-        gui.setItem(15, createGuiItem(Material.CLOCK, ChatColor.AQUA + "Duration: " + config.get("duration"),
-                ChatColor.GRAY + "Click to modify"));
+        gui.setItem(11, createGuiItem(Material.BEACON, ChatColor.AQUA + "Radius: " + radius, ChatColor.GRAY + "Click to modify"));
+        gui.setItem(15, createGuiItem(Material.CLOCK, ChatColor.AQUA + "Duration: " + duration, ChatColor.GRAY + "Click to modify"));
 
         player.openInventory(gui);
     }
 
     public void updateSpellConfig(String wandType, String spellName, String variable, double value) {
-        spellConfigs.get(wandType.toLowerCase()).get(spellName).put(variable, value);
-    }
-
-    public double getSpellConfig(String wandType, String spellName, String variable) {
-        return spellConfigs.get(wandType.toLowerCase()).get(spellName).get(variable);
+        configVars.setSpellProperty(wandType, spellName, variable, value);
+        Player player = Bukkit.getPlayer("playerName");
+        if (player != null) {
+            openSpellConfigurationGUI(player, wandType, spellName);
+        }
     }
 
     private ItemStack createGuiItem(Material material, String name, String... lore) {
-        ItemStack item = new ItemStack(material, 1);
+        ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(name);
-        meta.setLore(Arrays.asList(lore));
-        item.setItemMeta(meta);
+        if (meta != null) {
+            meta.setDisplayName(name);
+            meta.setLore(Arrays.asList(lore));
+            item.setItemMeta(meta);
+        }
         return item;
     }
 }
