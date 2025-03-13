@@ -14,12 +14,10 @@ import java.util.UUID;
 
 public class GUIListener implements Listener {
     private final Wandplugin plugin;
-    private final GUIManager guiManager;
     private final Map<UUID, String> playerWandTypes = new HashMap<>();
 
     public GUIListener(Wandplugin plugin) {
         this.plugin = plugin;
-        this.guiManager = plugin.getGUIManager();
     }
 
     @EventHandler
@@ -40,7 +38,7 @@ public class GUIListener implements Listener {
             };
             if (!wandType.isEmpty()) {
                 playerWandTypes.put(player.getUniqueId(), wandType);
-                guiManager.openSpellListGUI(player, wandType);
+                plugin.getGUIManager().openSpellListGUI(player, wandType);
             }
         } else if (title.startsWith(ChatColor.GREEN.toString())) {
             event.setCancelled(true);
@@ -48,7 +46,7 @@ public class GUIListener implements Listener {
 
             String wandType = playerWandTypes.get(player.getUniqueId());
             String spellName = ChatColor.stripColor(event.getCurrentItem().getItemMeta().getDisplayName());
-            guiManager.openSpellConfigurationGUI(player, wandType, spellName);
+            plugin.getGUIManager().openSpellConfigurationGUI(player, wandType, spellName);
         } else if (title.endsWith("Configuration")) {
             event.setCancelled(true);
             if (event.getCurrentItem() == null) return;
@@ -60,7 +58,7 @@ public class GUIListener implements Listener {
             ItemStack clickedItem = event.getCurrentItem();
             String itemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
 
-            if (itemName.startsWith("Radius") || itemName.startsWith("Duration")) {
+            if (itemName.startsWith("Radius") || itemName.startsWith("Duration") || itemName.startsWith("Cooldown")) {
                 String variable = itemName.split(":")[0].toLowerCase();
                 player.closeInventory();
                 player.sendMessage(ChatColor.YELLOW + "Enter new value for " + variable + " of " + spellName + ":");

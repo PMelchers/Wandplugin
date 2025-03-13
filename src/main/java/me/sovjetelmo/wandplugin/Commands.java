@@ -7,9 +7,11 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class Commands implements CommandExecutor {
+    private final Wandplugin plugin;
     private final GUIManager guiManager;
 
-    public Commands(GUIManager guiManager) {
+    public Commands(Wandplugin plugin, GUIManager guiManager) {
+        this.plugin = plugin;
         this.guiManager = guiManager;
     }
 

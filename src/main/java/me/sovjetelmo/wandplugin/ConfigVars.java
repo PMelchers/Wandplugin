@@ -40,9 +40,17 @@ public class ConfigVars {
 
     public void setSpellProperty(String wandType, String spellName, String property, double value) {
         if (spellsConfig.contains(wandType + "." + spellName)) {
-            spellsConfig.set(wandType + "." + spellName + "." + property, value);
+            if (property.equals("cooldown")) {
+                spellsConfig.set(wandType + "." + spellName + "." + property, (int) value);
+            } else {
+                spellsConfig.set(wandType + "." + spellName + "." + property, value);
+            }
         }
         saveConfig();
+    }
+
+    public int getSpellCooldown(String wandType, String spellName) {
+        return spellsConfig.getInt(wandType + "." + spellName + ".cooldown");
     }
 
     public List<String> getSpells(String wandType) {

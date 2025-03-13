@@ -24,6 +24,7 @@ public class Spells {
     public Spells(Wandplugin plugin) {
         this.plugin = plugin;
         this.configVars = plugin.getConfigVars();
+
     }
 
     /* general functions */

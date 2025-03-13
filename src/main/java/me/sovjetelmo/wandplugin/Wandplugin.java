@@ -1,11 +1,6 @@
 package me.sovjetelmo.wandplugin;
 
-import org.bukkit.configuration.ConfigurationSection;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
 
 public final class Wandplugin extends JavaPlugin {
     private static Wandplugin instance;
@@ -19,9 +14,9 @@ public final class Wandplugin extends JavaPlugin {
         saveResource("spells.yml", false);
         configVars = new ConfigVars();
         guiManager = new GUIManager(this, configVars);
-        getCommand("magicwand").setExecutor(new Commands(guiManager));
-        getCommand("mw").setExecutor(new Commands(guiManager));
-        getCommand("mwconfig").setExecutor(new Commands(guiManager));
+        getCommand("magicwand").setExecutor(new Commands(this, guiManager));
+        getCommand("mw").setExecutor(new Commands(this, guiManager));
+        getCommand("mwconfig").setExecutor(new Commands(this, guiManager));
         getServer().getPluginManager().registerEvents(new MagicWandsListener(this), this);
         getServer().getPluginManager().registerEvents(new GUIListener(this), this);
     }

@@ -2,83 +2,112 @@ god:
   Regeneration:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Healing Aura:
     radius: 3.0
     duration: 15.0
+    cooldown: 30
   Manaburst:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Protection Shield:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Divine Smite:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Blessing:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Divine Light:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Sacrifice:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Holy Wrath:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Purify:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Cleansing Touch:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Guardian Angel:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
+
 raftagar:
   Fireball:
     radius: 2.0
     duration: 5.0
+    cooldown: 30
   Lightning Strike:
     radius: 1.0
     duration: 3.0
+    cooldown: 30
   Chain Lightning:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Tornado:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Ice Spike:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Frost Shield:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Lightning Storm:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
+
 empire:
   Tornado:
     radius: 4.0
     duration: 8.0
+    cooldown: 30
   Potion:
     radius: 3.0
     duration: 6.0
+    cooldown: 30
   Arrow:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Confusion:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Beast:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Flame Shove:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Time Freeze:
     radius: 5.0
     duration: 10.0
+    cooldown: 30
   Invisibility:
     radius: 5.0
     duration: 10.0
+    cooldown: 30

@@ -16,6 +16,7 @@ import java.util.UUID;
 public class MagicWandsListener implements Listener {
     private final Wandplugin plugin;
     private final Map<UUID, Integer> playerSpells = new HashMap<>();
+    private final Map<UUID, Map<String, Long>> spellCooldowns = new HashMap<>();
 
     public MagicWandsListener(Wandplugin plugin) {
         this.plugin = plugin;
@@ -31,7 +32,6 @@ public class MagicWandsListener implements Listener {
 
             if (meta != null && meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "wand-type"), PersistentDataType.STRING)) {
                 String wandType = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "wand-type"), PersistentDataType.STRING);
-
 
                 if (wandType != null) {
                     switch (wandType) {
@@ -54,59 +54,98 @@ public class MagicWandsListener implements Listener {
     }
 
     private void handleGodWandActions(Player player, PlayerInteractEvent event) {
+        String wandType = "god";
         switch (event.getAction()) {
             case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 12;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.GREEN + "Selected spell: " + getSpellName("god", nextSpell)  + " " + nextSpell);
+                player.sendMessage(ChatColor.GREEN + "Selected spell: " + getSpellName(wandType, nextSpell) + " " + nextSpell);
                 player.getWorld().playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.0f);
                 player.getWorld().spawnParticle(Particle.ELECTRIC_SPARK, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
-                castSpell(player, "god", spellIndex);
+                String spellName = getSpellName(wandType, spellIndex);
+                if (isOnSpellCooldown(player, wandType, spellName)) {
+                    player.sendMessage(ChatColor.RED + "You are on cooldown for " + spellName + "!");
+                } else {
+                    castSpell(player, wandType, spellIndex);
+                    setSpellCooldown(player, wandType, spellName);
+                }
             }
             default -> {}
         }
     }
 
     private void handleRaftagarWandActions(Player player, PlayerInteractEvent event) {
+        String wandType = "raftagar";
         switch (event.getAction()) {
             case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 7;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.RED + "Selected spell: " + getSpellName("raftagar", nextSpell)  + " " + nextSpell);
+                player.sendMessage(ChatColor.RED + "Selected spell: " + getSpellName(wandType, nextSpell) + " " + nextSpell);
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_CRIT, 1.0f, 1.0f);
                 player.getWorld().spawnParticle(Particle.CAMPFIRE_SIGNAL_SMOKE, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
                 player.getWorld().spawnParticle(Particle.SPIT, player.getLocation(), 20, 1.5, 1.5, 1.5, 0.1);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
-                castSpell(player, "raftagar", spellIndex);
+                String spellName = getSpellName(wandType, spellIndex);
+                if (isOnSpellCooldown(player, wandType, spellName)) {
+                    player.sendMessage(ChatColor.RED + "You are on cooldown for " + spellName + "!");
+                } else {
+                    castSpell(player, wandType, spellIndex);
+                    setSpellCooldown(player, wandType, spellName);
+                }
             }
             default -> {}
         }
     }
 
-    // Handle actions for the Empire Wand
     private void handleEmpireWandActions(Player player, PlayerInteractEvent event) {
+        String wandType = "empire";
         switch (event.getAction()) {
             case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> {
                 int currentSpell = playerSpells.getOrDefault(player.getUniqueId(), 0);
                 int nextSpell = (currentSpell + 1) % 8;
                 playerSpells.put(player.getUniqueId(), nextSpell);
-                player.sendMessage(ChatColor.BLUE + "Selected spell: " + getSpellName("empire", nextSpell) + " " + nextSpell);
+                player.sendMessage(ChatColor.BLUE + "Selected spell: " + getSpellName(wandType, nextSpell) + " " + nextSpell);
                 player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_TELEPORT, 1.0f, 1.0f);
                 player.getWorld().spawnParticle(Particle.WITCH, player.getLocation(), 20, 2, 2, 2, 0.02);
             }
             case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> {
                 int spellIndex = playerSpells.getOrDefault(player.getUniqueId(), 0);
-                castSpell(player, "empire", spellIndex);
+                String spellName = getSpellName(wandType, spellIndex);
+                if (isOnSpellCooldown(player, wandType, spellName)) {
+                    player.sendMessage(ChatColor.RED + "You are on cooldown for " + spellName + "!");
+                } else {
+                    castSpell(player, wandType, spellIndex);
+                    setSpellCooldown(player, wandType, spellName);
+                }
             }
             default -> {}
         }
+    }
+
+    private boolean isOnSpellCooldown(Player player, String wandType, String spellName) {
+        UUID playerId = player.getUniqueId();
+        if (!spellCooldowns.containsKey(playerId)) {
+            return false;
+        }
+        Map<String, Long> playerCooldowns = spellCooldowns.get(playerId);
+        if (!playerCooldowns.containsKey(spellName)) {
+            return false;
+        }
+        long cooldownEnd = playerCooldowns.get(spellName);
+        return System.currentTimeMillis() < cooldownEnd;
+    }
+
+    private void setSpellCooldown(Player player, String wandType, String spellName) {
+        UUID playerId = player.getUniqueId();
+        int cooldownTime = plugin.getConfigVars().getSpellCooldown(wandType, spellName) * 1000;
+        spellCooldowns.computeIfAbsent(playerId, k -> new HashMap<>()).put(spellName, System.currentTimeMillis() + cooldownTime);
     }
 
     private void castSpell(Player player, String wandType, int spellIndex) {
@@ -158,7 +197,6 @@ public class MagicWandsListener implements Listener {
             default -> player.sendMessage(ChatColor.RED + "Invalid wand type.");
         }
     }
-
 
     private String getSpellName(String wandType, int spellIndex) {
         switch (wandType.toLowerCase()) {

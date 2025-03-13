@@ -3,9 +3,9 @@ package me.sovjetelmo.wandplugin;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.HandlerList;
 
 public class ChatInputListener implements Listener {
     private final Wandplugin plugin;
@@ -28,13 +28,19 @@ public class ChatInputListener implements Listener {
             event.setCancelled(true);
             String input = event.getMessage();
             try {
-                double value = Double.parseDouble(input);
+                double value;
+                if (variable.equals("cooldown")) {
+                    value = Integer.parseInt(input);
+                } else {
+                    value = Double.parseDouble(input);
+                }
                 if (value < 0) {
                     throw new NumberFormatException("Negative value");
                 }
+                double finalValue = value;
                 plugin.getServer().getScheduler().runTask(plugin, () -> {
-                    plugin.getGUIManager().updateSpellConfig(wandType, spellName, variable, value);
-                    player.sendMessage(ChatColor.GREEN + "Updated " + variable + " for " + spellName + " to " + value);
+                    plugin.getConfigVars().setSpellProperty(wandType, spellName, variable, finalValue);
+                    player.sendMessage(ChatColor.GREEN + "Updated " + variable + " for " + spellName + " to " + finalValue);
                     plugin.getGUIManager().openSpellConfigurationGUI(player, wandType, spellName);
                 });
             } catch (NumberFormatException e) {
